@@ -1,44 +1,49 @@
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react'
 
-export default function Results() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [result, setResult] = useState('');
-  const [loading, setLoading] = useState(true);
+function Results() {
+  const [result, setResult] = useState(null)
 
-  // Get result from location state or simulate fetch
   useEffect(() => {
-    if (location.state?.result) {
-      setResult(location.state.result);
-      setLoading(false);
-    } else {
-      setResult('No result data received. Please resubmit the form.');
-      setLoading(false);
+    const stored = localStorage.getItem('prediction')
+    if (stored) {
+      setResult(JSON.parse(stored))
     }
-  }, [location]);
+  }, [])
+
+  if (!result) {
+    return (
+      <div className="text-center mt-10 text-gray-600">
+        <p>No prediction found. Please fill out the form first.</p>
+      </div>
+    )
+  }
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white border shadow-md rounded-xl p-8 w-full max-w-xl text-center">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">Prediction Result</h2>
+    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded shadow text-center">
+      <h2 className="text-3xl font-bold text-blue-600 mb-6">Prediction Results</h2>
 
-        {loading ? (
-          <p className="text-blue-600 text-lg">Loading...</p>
-        ) : (
-          <div>
-            <p className="text-xl font-semibold text-green-700 mb-6">
-              {result}
-            </p>
-            <button
-              onClick={() => navigate('/inputs')}
-              className="mt-4 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition"
-            >
-              Try Another Input
-            </button>
-          </div>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-lg font-medium text-gray-700">
+        <div className="bg-blue-50 p-4 rounded shadow">
+          <p className="text-sm text-gray-500 mb-1">Predicted Offer Price</p>
+          <p className="text-2xl font-bold text-green-600">${result.offerPrice}</p>
+        </div>
+
+        <div className="bg-blue-50 p-4 rounded shadow">
+          <p className="text-sm text-gray-500 mb-1">Day 1 Closing Price</p>
+          <p className="text-2xl font-bold text-blue-600">${result.day1Close}</p>
+        </div>
+
+        <div className="bg-blue-50 p-4 rounded shadow">
+          <p className="text-sm text-gray-500 mb-1">Risk Score</p>
+          <p className="text-2xl font-bold text-red-600">{result.riskScore}%</p>
+        </div>
       </div>
-    </section>
-  );
+
+      <p className="mt-6 text-sm text-gray-500">
+        These predictions are generated based on your IPO input data.
+      </p>
+    </div>
+  )
 }
+
+export default Results

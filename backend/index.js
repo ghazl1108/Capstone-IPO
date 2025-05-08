@@ -4,15 +4,20 @@ import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 
 import registerRoute from './routes/register.js'
+import loginRoute from './routes/login.js'
 import inputRoute from './routes/inputs.js'
 import resultRoute from './routes/results.js'
 import predictRoute from './routes/predict.js'
-
+import { auth } from './middleware/authMiddleware.js'
 
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 4000
+
+// Middleware
+app.use(cors())
+app.use(express.json())
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
@@ -22,16 +27,14 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('✅ MongoDB connected'))
 .catch(err => console.error('❌ MongoDB connection error:', err))
 
-// Middleware
-app.use(cors())
+// Public routes
 app.use('/api', registerRoute)
-app.use(express.json())
+app.use('/api', loginRoute)
 
-// Routes
-app.use('/api', registerRoute)
-app.use('/api', inputRoute)
-app.use('/api', resultRoute)
-app.use('/api', predictRoute)
+// Protected routes
+app.use('/api', auth, inputRoute)
+app.use('/api', auth, resultRoute)
+app.use('/api', auth, predictRoute)
 
 // Root route
 app.get('/', (req, res) => {

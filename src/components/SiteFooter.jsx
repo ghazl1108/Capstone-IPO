@@ -1,8 +1,10 @@
-export default function SiteFooter() {
+function SiteFooter() {
     return (
-      <footer className="w-full bg-gray-100 text-center text-sm py-4 text-gray-500 border-t mt-10">
-        © {new Date().getFullYear()} IPO Advisory Tool. All rights reserved.
+      <footer className="bg-gray-100 text-center py-6 border-t text-sm text-gray-500">
+        <p>© {new Date().getFullYear()} Capstone-IPO. All rights reserved.</p>
       </footer>
-    );
+    )
   }
+  
+  export default SiteFooter
   

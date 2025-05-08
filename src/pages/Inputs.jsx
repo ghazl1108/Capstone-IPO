@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
-export default function Inputs() {
+function Inputs() {
+  const navigate = useNavigate()
+
   const [formData, setFormData] = useState({
     egc: false,
     patRatio: '',
@@ -17,7 +19,7 @@ export default function Inputs() {
     sp2weeksBefore: '',
     blueSky: false,
     managementFee: '',
-    "commonEquity.1": '',
+    commonEquity_1: '',
     bookValue: '',
     totalAssets: '',
     totalRevenue: '',
@@ -33,98 +35,98 @@ export default function Inputs() {
     reputationLeadMax: '',
     reputationAvg: '',
     nPatents: '',
-    exchange_encoded: '',
-  });
-
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+    exchange_encoded: ''
+  })
 
   const handleChange = (e) => {
-    const { name, type, value, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
+    const { name, type, checked, value } = e.target
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value
+    })
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage('');
-    setLoading(true);
+    e.preventDefault()
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/predict`, formData);
-      setMessage(`✅ Prediction: ${res.data.result || 'Success'}`);
+      const res = await axios.post('https://ipo-backend.onrender.com/api/predict', formData)
+
+      localStorage.setItem('prediction', JSON.stringify(res.data))
+      navigate('/results')
     } catch (err) {
-      setMessage('❌ Error: ' + (err.response?.data?.message || 'Something went wrong.'));
-    } finally {
-      setLoading(false);
+      console.error(err)
+      alert('Failed to get prediction from AI model')
     }
-  };
+  }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="bg-white p-8 shadow-md border rounded-xl">
-        <h2 className="text-2xl font-bold text-center mb-6 text-blue-700">IPO Data Submission Form</h2>
+    <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded shadow">
+      <h2 className="text-2xl font-bold mb-6 text-center">IPO Input Form</h2>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Checkboxes */}
+        {[
+          'egc',
+          'highTech',
+          'blueSky',
+          'vc',
+          'priorFinancing'
+        ].map((field) => (
+          <label key={field} className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              name={field}
+              checked={formData[field]}
+              onChange={handleChange}
+            />
+            <span>{field}</span>
+          </label>
+        ))}
 
-        {message && (
-          <div className="text-center mb-4 text-sm font-medium text-blue-600">
-            {message}
-          </div>
-        )}
+        {/* Number inputs */}
+        {[
+          'patRatio', 'age', 'year', 'nUnderwriters', 'sharesOfferedPerc', 'investmentReceived',
+          'amountOnProspectus', 'commonEquity', 'sp2weeksBefore', 'managementFee', 'commonEquity_1',
+          'bookValue', 'totalAssets', 'totalRevenue', 'netIncome', 'roa', 'leverage', 'pe',
+          'prominence', 'nVCs', 'nExecutives', 'reputationLeadMax', 'reputationAvg', 'nPatents'
+        ].map((field) => (
+          <input
+            key={field}
+            type="number"
+            name={field}
+            value={formData[field]}
+            onChange={handleChange}
+            className="p-2 border rounded"
+            placeholder={field}
+            required
+          />
+        ))}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* Render each field */}
-          {Object.entries(formData).map(([key, value]) => (
-            <div key={key}>
-              <label className="block font-medium mb-1 capitalize">
-                {key.replaceAll(/[_\.]/g, ' ').replace('encoded', '').trim()}
-              </label>
-              {typeof value === 'boolean' ? (
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    name={key}
-                    checked={value}
-                    onChange={handleChange}
-                    className="h-5 w-5"
-                  />
-                  <span>{value ? 'Yes' : 'No'}</span>
-                </div>
-              ) : key === 'exchange_encoded' ? (
-                <select
-                  name={key}
-                  value={value}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="">Select Exchange</option>
-                  <option value="0">NASDAQ</option>
-                  <option value="1">NYSE</option>
-                  <option value="2">Other</option>
-                </select>
-              ) : (
-                <input
-                  type="number"
-                  name={key}
-                  value={value}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md"
-                />
-              )}
-            </div>
-          ))}
+        {/* Dropdown */}
+        <label className="md:col-span-2">
+          Exchange Encoded:
+          <select
+            name="exchange_encoded"
+            value={formData.exchange_encoded}
+            onChange={handleChange}
+            className="w-full p-2 border mt-1 rounded"
+            required
+          >
+            <option value="">Select exchange</option>
+            <option value="0">NASDAQ</option>
+            <option value="1">NYSE</option>
+            <option value="2">AMEX</option>
+          </select>
+        </label>
 
-          <div className="sm:col-span-2 mt-6">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition"
-            >
-              {loading ? 'Submitting...' : 'Submit Data'}
-            </button>
-          </div>
-        </form>
-      </div>
+        <button
+          type="submit"
+          className="mt-6 md:col-span-2 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+        >
+          Submit for Prediction
+        </button>
+      </form>
     </div>
-  );
+  )
 }
+
+export default Inputs
