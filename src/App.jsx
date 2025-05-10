@@ -1,28 +1,32 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home.jsx'
-import Register from './pages/Register.jsx'
-import Inputs from './pages/Inputs.jsx'
-import Results from './pages/Results.jsx'
-import SiteHeader from './components/SiteHeader.jsx'
-import SiteFooter from './components/SiteFooter.jsx' // ✅ add this
+// src/App.jsx
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import SiteHeader from './components/SiteHeader';
+import SiteFooter from './components/SiteFooter';
+import HomePage from './pages/HomePage';
+import RegisterPage from './pages/RegisterPage';
+import ResultsPage from './pages/ResultsPage';
+import LoginPage from './pages/LoginPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <div className="flex flex-col min-h-screen">
         <SiteHeader />
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/inputs" element={<Inputs />} />
-            <Route path="/results" element={<Results />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/results" element={<ResultsPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/not-found" element={<NotFoundPage />} />
+            <Route path="*" element={<Navigate to="/not-found" replace />} />
           </Routes>
         </main>
-        <SiteFooter /> {/* ✅ footer appears at bottom */}
+        <SiteFooter />
       </div>
-    </Router>
-  )
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
