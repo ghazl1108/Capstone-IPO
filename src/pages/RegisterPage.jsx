@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MultiStepForm } from "../components/MultiStepForm";
 
+
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);

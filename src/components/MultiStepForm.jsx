@@ -6,7 +6,6 @@ import * as z from "zod";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Textarea } from "./ui/Textarea";
-import { Checkbox } from "./ui/Checkbox";
 import { ArrowLeft, ArrowRight, Upload } from 'lucide-react';
 import { Progress } from "./ui/Progress";
 
@@ -19,25 +18,37 @@ const registrationSchema = z.object({
 });
 
 const predictionDataSchema = z.object({
-  egc: z.string().optional(),
-  patRatio: z.string().optional(),
-  highTech: z.boolean().optional().default(false),
-  age: z.string().optional(),
-  year: z.string().optional(),
-  nUnderwriters: z.string().optional(),
-  sharesOfferedPerc: z.string().optional(),
-  investmentReceived: z.string().optional(),
-  amountOnProspectus: z.string().optional(),
-  commonEquity: z.string().optional(),
-  sp2weeksBefore: z.string().optional(),
-  blueSky: z.string().optional(),
-  managementFee: z.string().optional(),
-  bookValue: z.string().optional(),
-  totalAssets: z.string().optional(),
-  totalRevenue: z.string().optional(),
-  netIncome: z.string().optional(),
-  roa: z.string().optional(),
-  leverage: z.string().optional(),
+  // All fields are required
+  industryFF12: z.string().min(1, { message: "Industry is required" }),
+  exchange: z.string().min(1, { message: "Exchange is required" }),
+  highTech: z.string().min(1, { message: "High tech indicator is required" }),
+  egc: z.string().min(1, { message: "EGC indicator is required" }),
+  vc: z.string().min(1, { message: "VC backing indicator is required" }),
+  prominence: z.string().min(1, { message: "VC prominence is required" }),
+  pe: z.string().min(1, { message: "PE backing indicator is required" }),
+  age: z.string().min(1, { message: "Firm age is required" }),
+  year: z.string().min(1, { message: "Issue year is required" }),
+  nUnderwriters: z.string().min(1, { message: "Count of underwriters is required" }),
+  sharesOfferedPerc: z.string().min(1, { message: "Shares offered percentage is required" }),
+  investmentReceived: z.string().min(1, { message: "Investment received is required" }),
+  amountOnProspectus: z.string().min(1, { message: "Amount on prospectus is required" }),
+  commonEquity: z.string().min(1, { message: "Common equity ratio is required" }),
+  sp2weeksBefore: z.string().min(1, { message: "S&P 500 average is required" }),
+  blueSky: z.string().min(1, { message: "Blue sky expenses is required" }),
+  managementFee: z.string().min(1, { message: "Management fee is required" }),
+  bookValue: z.string().min(1, { message: "Book value is required" }),
+  totalAssets: z.string().min(1, { message: "Total assets is required" }),
+  totalRevenue: z.string().min(1, { message: "Total revenue is required" }),
+  netIncome: z.string().min(1, { message: "Net income is required" }),
+  roa: z.string().min(1, { message: "Return on assets is required" }),
+  leverage: z.string().min(1, { message: "Leverage is required" }),
+  nVCs: z.string().min(1, { message: "Count of VC firms is required" }),
+  nExecutives: z.string().min(1, { message: "Count of executives is required" }),
+  priorFinancing: z.string().min(1, { message: "Prior financing is required" }),
+  reputationLeadMax: z.string().min(1, { message: "Lead underwriter reputation is required" }),
+  reputationAvg: z.string().min(1, { message: "Average underwriter reputation is required" }),
+  nPatents: z.string().min(1, { message: "Count of patents is required" }),
+  ipoSize: z.string().min(1, { message: "IPO size is required" }),
 });
 
 const riskAnalysisSchema = z.object({
@@ -62,11 +73,36 @@ const steps = [
   },
 ];
 
-export function MultiStepForm({
-  onSubmit,
-  currentStep,
-  setCurrentStep,
-}) {
+// Industry codes for dropdown
+const industryFF12Options = [
+  { value: "Technology", label: "Technology" },
+  { value: "Healthcare", label: "Healthcare" },
+  { value: "Finance", label: "Finance" },
+  { value: "Consumer Goods", label: "Consumer Goods" },
+  { value: "Energy", label: "Energy" },
+  { value: "Telecommunications", label: "Telecommunications" },
+  { value: "Utilities", label: "Utilities" },
+  { value: "Real Estate", label: "Real Estate" },
+  { value: "Materials", label: "Materials" },
+  { value: "Industrials", label: "Industrials" },
+  { value: "Consumer Services", label: "Consumer Services" },
+  { value: "Other", label: "Other" },
+];
+
+// Exchange options
+const exchangeOptions = [
+  { value: "AMEX", label: "AMEX" },
+  { value: "NASDAQ", label: "NASDAQ" },
+  { value: "NYSE", label: "NYSE" },
+];
+
+// Boolean options for dropdowns
+const booleanOptions = [
+  { value: "true", label: "True" },
+  { value: "false", label: "False" },
+];
+
+export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
   // Store form data between steps
   const [formData, setFormData] = useState({});
   
@@ -244,117 +280,486 @@ export function MultiStepForm({
 
         {currentStep === 1 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Dropdown Fields */}
+            <div className="space-y-2">
+              <label htmlFor="industryFF12" className="block text-sm font-medium text-slate-700">
+                Industry Classification
+              </label>
+              <select
+                id="industryFF12"
+                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                {...form.register("industryFF12")}
+                required
+              >
+                <option value="">Select industry</option>
+                {industryFF12Options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ErrorMessage name="industryFF12" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="exchange" className="block text-sm font-medium text-slate-700">
+                Exchange where shares will be listed on
+              </label>
+              <select
+                id="exchange"
+                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                {...form.register("exchange")}
+                required
+              >
+                <option value="">Select exchange</option>
+                {exchangeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ErrorMessage name="exchange" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="highTech" className="block text-sm font-medium text-slate-700">
+                High tech firm indicator
+              </label>
+              <select
+                id="highTech"
+                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                {...form.register("highTech")}
+                required
+              >
+                <option value="">Select</option>
+                {booleanOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ErrorMessage name="highTech" />
+            </div>
+
             <div className="space-y-2">
               <label htmlFor="egc" className="block text-sm font-medium text-slate-700">
-                EGC Status
+                Emerging Growth Company indicator
               </label>
-              <Input
+              <select
                 id="egc"
-                placeholder="EGC Status"
+                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
                 {...form.register("egc")}
-              />
+                required
+              >
+                <option value="">Select</option>
+                {booleanOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ErrorMessage name="egc" />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="patRatio" className="block text-sm font-medium text-slate-700">
-                Patent Ratio
+              <label htmlFor="vc" className="block text-sm font-medium text-slate-700">
+                Venture capital backing indicator
               </label>
-              <Input
-                id="patRatio"
-                placeholder="Patent Ratio"
-                {...form.register("patRatio")}
-              />
+              <select
+                id="vc"
+                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                {...form.register("vc")}
+                required
+              >
+                <option value="">Select</option>
+                {booleanOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ErrorMessage name="vc" />
             </div>
 
-            <div className="flex items-start space-x-3 p-4 border rounded-md">
-              <input
-                type="checkbox"
-                id="highTech"
-                {...form.register("highTech")}
-                className="h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <div className="space-y-2">
+              <label htmlFor="pe" className="block text-sm font-medium text-slate-700">
+                Private equity backing indicator
+              </label>
+              <select
+                id="pe"
+                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                {...form.register("pe")}
+                required
+              >
+                <option value="">Select</option>
+                {booleanOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ErrorMessage name="pe" />
+            </div>
+
+            {/* Number Input Fields */}
+            <div className="space-y-2">
+              <label htmlFor="prominence" className="block text-sm font-medium text-slate-700">
+                VC prominence
+              </label>
+              <Input 
+                id="prominence" 
+                type="number" 
+                placeholder="Enter VC prominence" 
+                {...form.register("prominence")} 
+                required
+                className={form.formState.errors.prominence ? "border-red-500" : ""}
               />
-              <div className="space-y-1 leading-none">
-                <label htmlFor="highTech" className="block text-sm font-medium text-slate-700">
-                  High-Tech Company
-                </label>
-              </div>
+              <ErrorMessage name="prominence" />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="age" className="block text-sm font-medium text-slate-700">
-                Company Age (Years)
+                Firm age
               </label>
-              <Input
-                id="age"
-                placeholder="Company Age"
-                {...form.register("age")}
+              <Input 
+                id="age" 
+                type="number" 
+                placeholder="Enter firm age" 
+                {...form.register("age")} 
+                required
+                className={form.formState.errors.age ? "border-red-500" : ""}
               />
+              <ErrorMessage name="age" />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="year" className="block text-sm font-medium text-slate-700">
-                IPO Year
+                Issue year
               </label>
-              <Input
-                id="year"
-                placeholder="IPO Year"
-                {...form.register("year")}
+              <Input 
+                id="year" 
+                type="number" 
+                placeholder="Enter issue year" 
+                {...form.register("year")} 
+                required
+                className={form.formState.errors.year ? "border-red-500" : ""}
               />
+              <ErrorMessage name="year" />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="nUnderwriters" className="block text-sm font-medium text-slate-700">
-                Number of Underwriters
+                Count of underwriters
               </label>
-              <Input
-                id="nUnderwriters"
-                placeholder="Number of Underwriters"
-                {...form.register("nUnderwriters")}
+              <Input 
+                id="nUnderwriters" 
+                type="number" 
+                placeholder="Enter count of underwriters" 
+                {...form.register("nUnderwriters")} 
+                required
+                className={form.formState.errors.nUnderwriters ? "border-red-500" : ""}
               />
+              <ErrorMessage name="nUnderwriters" />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="sharesOfferedPerc" className="block text-sm font-medium text-slate-700">
-                Shares Offered (%)
+                Shares offered as % of shares outstanding after offer
               </label>
-              <Input
-                id="sharesOfferedPerc"
-                placeholder="Percentage of Shares Offered"
-                {...form.register("sharesOfferedPerc")}
+              <Input 
+                id="sharesOfferedPerc" 
+                type="number" 
+                placeholder="Enter percentage" 
+                {...form.register("sharesOfferedPerc")} 
+                required
+                className={form.formState.errors.sharesOfferedPerc ? "border-red-500" : ""}
               />
+              <ErrorMessage name="sharesOfferedPerc" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="investmentReceived" className="block text-sm font-medium text-slate-700">
+                Total known amount invested in company ($000)
+              </label>
+              <Input 
+                id="investmentReceived" 
+                type="number" 
+                placeholder="Enter amount" 
+                {...form.register("investmentReceived")} 
+                required
+                className={form.formState.errors.investmentReceived ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="investmentReceived" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="amountOnProspectus" className="block text-sm font-medium text-slate-700">
+                Total amount on prospectus (USD, Global)
+              </label>
+              <Input 
+                id="amountOnProspectus" 
+                type="number" 
+                placeholder="Enter amount" 
+                {...form.register("amountOnProspectus")} 
+                required
+                className={form.formState.errors.amountOnProspectus ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="amountOnProspectus" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="commonEquity" className="block text-sm font-medium text-slate-700">
+                Tangible Common Equity Ratio Before Offer
+              </label>
+              <Input 
+                id="commonEquity" 
+                type="number" 
+                placeholder="Enter ratio" 
+                {...form.register("commonEquity")} 
+                required
+                className={form.formState.errors.commonEquity ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="commonEquity" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="sp2weeksBefore" className="block text-sm font-medium text-slate-700">
+                S&P 500 average 2 weeks before offer date
+              </label>
+              <Input 
+                id="sp2weeksBefore" 
+                type="number" 
+                placeholder="Enter S&P average" 
+                {...form.register("sp2weeksBefore")} 
+                required
+                className={form.formState.errors.sp2weeksBefore ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="sp2weeksBefore" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="blueSky" className="block text-sm font-medium text-slate-700">
+                Blue sky expenses
+              </label>
+              <Input 
+                id="blueSky" 
+                type="number" 
+                placeholder="Enter expenses" 
+                {...form.register("blueSky")} 
+                required
+                className={form.formState.errors.blueSky ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="blueSky" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="managementFee" className="block text-sm font-medium text-slate-700">
+                Total management fee
+              </label>
+              <Input 
+                id="managementFee" 
+                type="number" 
+                placeholder="Enter fee" 
+                {...form.register("managementFee")} 
+                required
+                className={form.formState.errors.managementFee ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="managementFee" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="bookValue" className="block text-sm font-medium text-slate-700">
+                Book value
+              </label>
+              <Input 
+                id="bookValue" 
+                type="number" 
+                placeholder="Enter book value" 
+                {...form.register("bookValue")} 
+                required
+                className={form.formState.errors.bookValue ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="bookValue" />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="totalAssets" className="block text-sm font-medium text-slate-700">
-                Total Assets ($)
+                Total assets
               </label>
-              <Input
-                id="totalAssets"
-                placeholder="Total Assets"
-                {...form.register("totalAssets")}
+              <Input 
+                id="totalAssets" 
+                type="number" 
+                placeholder="Enter total assets" 
+                {...form.register("totalAssets")} 
+                required
+                className={form.formState.errors.totalAssets ? "border-red-500" : ""}
               />
+              <ErrorMessage name="totalAssets" />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="totalRevenue" className="block text-sm font-medium text-slate-700">
-                Total Revenue ($)
+                Total revenue
               </label>
-              <Input
-                id="totalRevenue"
-                placeholder="Total Revenue"
-                {...form.register("totalRevenue")}
+              <Input 
+                id="totalRevenue" 
+                type="number" 
+                placeholder="Enter total revenue" 
+                {...form.register("totalRevenue")} 
+                required
+                className={form.formState.errors.totalRevenue ? "border-red-500" : ""}
               />
+              <ErrorMessage name="totalRevenue" />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="netIncome" className="block text-sm font-medium text-slate-700">
-                Net Income ($)
+                Net income
               </label>
-              <Input
-                id="netIncome"
-                placeholder="Net Income"
-                {...form.register("netIncome")}
+              <Input 
+                id="netIncome" 
+                type="number" 
+                placeholder="Enter net income" 
+                {...form.register("netIncome")} 
+                required
+                className={form.formState.errors.netIncome ? "border-red-500" : ""}
               />
+              <ErrorMessage name="netIncome" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="roa" className="block text-sm font-medium text-slate-700">
+                Return on assets
+              </label>
+              <Input 
+                id="roa" 
+                type="number" 
+                placeholder="Enter ROA" 
+                {...form.register("roa")} 
+                required
+                className={form.formState.errors.roa ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="roa" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="leverage" className="block text-sm font-medium text-slate-700">
+                Leverage
+              </label>
+              <Input 
+                id="leverage" 
+                type="number" 
+                placeholder="Enter leverage" 
+                {...form.register("leverage")} 
+                required
+                className={form.formState.errors.leverage ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="leverage" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="nVCs" className="block text-sm font-medium text-slate-700">
+                Count of VC firms backing IPO firm
+              </label>
+              <Input 
+                id="nVCs" 
+                type="number" 
+                placeholder="Enter count of VC firms" 
+                {...form.register("nVCs")} 
+                required
+                className={form.formState.errors.nVCs ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="nVCs" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="nExecutives" className="block text-sm font-medium text-slate-700">
+                Count of executives
+              </label>
+              <Input 
+                id="nExecutives" 
+                type="number" 
+                placeholder="Enter count of executives" 
+                {...form.register("nExecutives")} 
+                required
+                className={form.formState.errors.nExecutives ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="nExecutives" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="priorFinancing" className="block text-sm font-medium text-slate-700">
+                Prior financing received
+              </label>
+              <Input 
+                id="priorFinancing" 
+                type="number" 
+                placeholder="Enter prior financing" 
+                {...form.register("priorFinancing")} 
+                required
+                className={form.formState.errors.priorFinancing ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="priorFinancing" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="reputationLeadMax" className="block text-sm font-medium text-slate-700">
+                Lead underwriter reputation (max if more than one)
+              </label>
+              <Input 
+                id="reputationLeadMax" 
+                type="number" 
+                placeholder="Enter reputation score" 
+                {...form.register("reputationLeadMax")} 
+                required
+                className={form.formState.errors.reputationLeadMax ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="reputationLeadMax" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="reputationAvg" className="block text-sm font-medium text-slate-700">
+                Average reputation of all underwriters
+              </label>
+              <Input 
+                id="reputationAvg" 
+                type="number" 
+                placeholder="Enter average reputation" 
+                {...form.register("reputationAvg")} 
+                required
+                className={form.formState.errors.reputationAvg ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="reputationAvg" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="nPatents" className="block text-sm font-medium text-slate-700">
+                Count of patents granted at time of IPO
+              </label>
+              <Input 
+                id="nPatents" 
+                type="number" 
+                placeholder="Enter count of patents" 
+                {...form.register("nPatents")} 
+                required
+                className={form.formState.errors.nPatents ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="nPatents" />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="ipoSize" className="block text-sm font-medium text-slate-700">
+                IPO size in USD
+              </label>
+              <Input 
+                id="ipoSize" 
+                type="number" 
+                placeholder="Enter IPO size" 
+                {...form.register("ipoSize")} 
+                required
+                className={form.formState.errors.ipoSize ? "border-red-500" : ""}
+              />
+              <ErrorMessage name="ipoSize" />
             </div>
           </div>
         )}
@@ -420,7 +825,7 @@ export function MultiStepForm({
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          
+
           <div className="space-x-2">
             {currentStep === 2 && (
               <Button
@@ -432,7 +837,7 @@ export function MultiStepForm({
                 Skip
               </Button>
             )}
-            
+
             <Button
               type="button"
               onClick={handleNext}
