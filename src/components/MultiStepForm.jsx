@@ -1,13 +1,15 @@
+"use client"
+
 // src/components/MultiStepForm.jsx
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Textarea } from "./ui/Textarea";
-import { ArrowLeft, ArrowRight, Upload } from 'lucide-react';
-import { Progress } from "./ui/Progress";
+import { useState, useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Button } from "./ui/Button"
+import { Input } from "./ui/Input"
+import { Textarea } from "./ui/Textarea"
+import { ArrowLeft, ArrowRight, Upload } from "lucide-react"
+import { Progress } from "./ui/Progress"
 
 // Form schemas for each step
 const registrationSchema = z.object({
@@ -15,7 +17,7 @@ const registrationSchema = z.object({
   registrationNumber: z.string().min(2, { message: "Registration number is required" }),
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(8, { message: "Password must be at least 8 characters" }),
-});
+})
 
 const predictionDataSchema = z.object({
   // All fields are required
@@ -49,14 +51,14 @@ const predictionDataSchema = z.object({
   reputationAvg: z.string().min(1, { message: "Average underwriter reputation is required" }),
   nPatents: z.string().min(1, { message: "Count of patents is required" }),
   ipoSize: z.string().min(1, { message: "IPO size is required" }),
-});
+})
 
 const riskAnalysisSchema = z.object({
   additionalInfo: z.string().optional(),
   uploadPdf: z.boolean().optional().default(false),
-});
+})
 
-const formSchemas = [registrationSchema, predictionDataSchema, riskAnalysisSchema];
+const formSchemas = [registrationSchema, predictionDataSchema, riskAnalysisSchema]
 
 const steps = [
   {
@@ -71,7 +73,7 @@ const steps = [
     title: "Risk Analysis",
     description: "Additional information for risk assessment",
   },
-];
+]
 
 // Industry codes for dropdown
 const industryFF12Options = [
@@ -87,115 +89,113 @@ const industryFF12Options = [
   { value: "Industrials", label: "Industrials" },
   { value: "Consumer Services", label: "Consumer Services" },
   { value: "Other", label: "Other" },
-];
+]
 
 // Exchange options
 const exchangeOptions = [
   { value: "AMEX", label: "AMEX" },
   { value: "NASDAQ", label: "NASDAQ" },
   { value: "NYSE", label: "NYSE" },
-];
+]
 
 // Boolean options for dropdowns
 const booleanOptions = [
   { value: "true", label: "True" },
   { value: "false", label: "False" },
-];
+]
 
 export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
   // Store form data between steps
-  const [formData, setFormData] = useState({});
-  
+  const [formData, setFormData] = useState({})
+
   // Create a form for the current step
   const form = useForm({
     resolver: zodResolver(formSchemas[currentStep]),
     defaultValues: formData,
-    mode: "onChange" // Validate on change for better user experience
-  });
-  
+    mode: "onChange", // Validate on change for better user experience
+  })
+
   // Update form with existing data when step changes
   useEffect(() => {
-    const currentValues = formData;
-    Object.keys(form.getValues()).forEach(key => {
+    const currentValues = formData
+    Object.keys(form.getValues()).forEach((key) => {
       if (currentValues[key] !== undefined) {
-        form.setValue(key, currentValues[key]);
+        form.setValue(key, currentValues[key])
       }
-    });
-  }, [currentStep, form, formData]);
+    })
+  }, [currentStep, form, formData])
 
   // Debug logging to help identify issues
   useEffect(() => {
-    console.log("Current step:", currentStep);
-    console.log("Form data:", formData);
-    console.log("Form errors:", form.formState.errors);
-  }, [currentStep, formData, form.formState.errors]);
+    console.log("Current step:", currentStep)
+    console.log("Form data:", formData)
+    console.log("Form errors:", form.formState.errors)
+  }, [currentStep, formData, form.formState.errors])
 
   const handleNext = async () => {
-    console.log("Next button clicked");
-    
+    console.log("Next button clicked")
+
     try {
       // Validate current step
-      const result = await form.trigger();
-      console.log("Validation result:", result);
-      
+      const result = await form.trigger()
+      console.log("Validation result:", result)
+
       if (result) {
         // Get current form values
-        const stepData = form.getValues();
-        console.log("Step data:", stepData);
-        
+        const stepData = form.getValues()
+        console.log("Step data:", stepData)
+
         // Update form data
-        const updatedFormData = { ...formData, ...stepData };
-        setFormData(updatedFormData);
-        
+        const updatedFormData = { ...formData, ...stepData }
+        setFormData(updatedFormData)
+
         // Move to next step or submit
         if (currentStep < steps.length - 1) {
-          setCurrentStep(currentStep + 1);
+          setCurrentStep(currentStep + 1)
         } else {
-          console.log("Submitting form with data:", updatedFormData);
-          onSubmit(updatedFormData);
+          console.log("Submitting form with data:", updatedFormData)
+          onSubmit(updatedFormData)
         }
       } else {
-        console.log("Form validation failed");
+        console.log("Form validation failed")
         // Show validation errors
-        Object.keys(form.formState.errors).forEach(key => {
-          console.error(`Field ${key} error:`, form.formState.errors[key]);
-        });
+        Object.keys(form.formState.errors).forEach((key) => {
+          console.error(`Field ${key} error:`, form.formState.errors[key])
+        })
       }
     } catch (error) {
-      console.error("Error in form handling:", error);
+      console.error("Error in form handling:", error)
     }
-  };
+  }
 
   const handleBack = () => {
     // Save current step data before going back
-    const stepData = form.getValues();
-    setFormData({ ...formData, ...stepData });
-    
+    const stepData = form.getValues()
+    setFormData({ ...formData, ...stepData })
+
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep(currentStep - 1)
     }
-  };
+  }
 
   const handleSkip = () => {
     // Save current step data even when skipping
-    const stepData = form.getValues();
-    const updatedFormData = { ...formData, ...stepData };
-    setFormData(updatedFormData);
-    
+    const stepData = form.getValues()
+    const updatedFormData = { ...formData, ...stepData }
+    setFormData(updatedFormData)
+
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep(currentStep + 1)
     } else {
-      onSubmit(updatedFormData);
+      onSubmit(updatedFormData)
     }
-  };
+  }
 
   // Helper function to render form error messages
   const ErrorMessage = ({ name }) => {
-    const error = form.formState.errors[name];
-    return error ? (
-      <p className="text-sm text-red-500 mt-1">{error.message}</p>
-    ) : null;
-  };
+    const error = form.formState.errors[name]
+    return error ? <p className="text-sm text-red-500 mt-1">{error.message}</p> : null
+  }
 
   return (
     <div className="space-y-8">
@@ -401,19 +401,24 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <ErrorMessage name="pe" />
             </div>
 
-            {/* Number Input Fields */}
+            {/* Changed from number input to boolean dropdown */}
             <div className="space-y-2">
               <label htmlFor="prominence" className="block text-sm font-medium text-slate-700">
                 VC prominence
               </label>
-              <Input 
-                id="prominence" 
-                type="number" 
-                placeholder="Enter VC prominence" 
-                {...form.register("prominence")} 
+              <select
+                id="prominence"
+                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                {...form.register("prominence")}
                 required
-                className={form.formState.errors.prominence ? "border-red-500" : ""}
-              />
+              >
+                <option value="">Select</option>
+                {booleanOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
               <ErrorMessage name="prominence" />
             </div>
 
@@ -421,11 +426,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="age" className="block text-sm font-medium text-slate-700">
                 Firm age
               </label>
-              <Input 
-                id="age" 
-                type="number" 
-                placeholder="Enter firm age" 
-                {...form.register("age")} 
+              <Input
+                id="age"
+                type="number"
+                placeholder="Enter firm age"
+                {...form.register("age")}
                 required
                 className={form.formState.errors.age ? "border-red-500" : ""}
               />
@@ -436,11 +441,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="year" className="block text-sm font-medium text-slate-700">
                 Issue year
               </label>
-              <Input 
-                id="year" 
-                type="number" 
-                placeholder="Enter issue year" 
-                {...form.register("year")} 
+              <Input
+                id="year"
+                type="number"
+                placeholder="Enter issue year"
+                {...form.register("year")}
                 required
                 className={form.formState.errors.year ? "border-red-500" : ""}
               />
@@ -451,11 +456,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="nUnderwriters" className="block text-sm font-medium text-slate-700">
                 Count of underwriters
               </label>
-              <Input 
-                id="nUnderwriters" 
-                type="number" 
-                placeholder="Enter count of underwriters" 
-                {...form.register("nUnderwriters")} 
+              <Input
+                id="nUnderwriters"
+                type="number"
+                placeholder="Enter count of underwriters"
+                {...form.register("nUnderwriters")}
                 required
                 className={form.formState.errors.nUnderwriters ? "border-red-500" : ""}
               />
@@ -466,11 +471,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="sharesOfferedPerc" className="block text-sm font-medium text-slate-700">
                 Shares offered as % of shares outstanding after offer
               </label>
-              <Input 
-                id="sharesOfferedPerc" 
-                type="number" 
-                placeholder="Enter percentage" 
-                {...form.register("sharesOfferedPerc")} 
+              <Input
+                id="sharesOfferedPerc"
+                type="number"
+                placeholder="Enter percentage"
+                {...form.register("sharesOfferedPerc")}
                 required
                 className={form.formState.errors.sharesOfferedPerc ? "border-red-500" : ""}
               />
@@ -481,11 +486,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="investmentReceived" className="block text-sm font-medium text-slate-700">
                 Total known amount invested in company ($000)
               </label>
-              <Input 
-                id="investmentReceived" 
-                type="number" 
-                placeholder="Enter amount" 
-                {...form.register("investmentReceived")} 
+              <Input
+                id="investmentReceived"
+                type="number"
+                placeholder="Enter amount"
+                {...form.register("investmentReceived")}
                 required
                 className={form.formState.errors.investmentReceived ? "border-red-500" : ""}
               />
@@ -496,11 +501,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="amountOnProspectus" className="block text-sm font-medium text-slate-700">
                 Total amount on prospectus (USD, Global)
               </label>
-              <Input 
-                id="amountOnProspectus" 
-                type="number" 
-                placeholder="Enter amount" 
-                {...form.register("amountOnProspectus")} 
+              <Input
+                id="amountOnProspectus"
+                type="number"
+                placeholder="Enter amount"
+                {...form.register("amountOnProspectus")}
                 required
                 className={form.formState.errors.amountOnProspectus ? "border-red-500" : ""}
               />
@@ -511,11 +516,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="commonEquity" className="block text-sm font-medium text-slate-700">
                 Tangible Common Equity Ratio Before Offer
               </label>
-              <Input 
-                id="commonEquity" 
-                type="number" 
-                placeholder="Enter ratio" 
-                {...form.register("commonEquity")} 
+              <Input
+                id="commonEquity"
+                type="number"
+                placeholder="Enter ratio"
+                {...form.register("commonEquity")}
                 required
                 className={form.formState.errors.commonEquity ? "border-red-500" : ""}
               />
@@ -526,11 +531,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="sp2weeksBefore" className="block text-sm font-medium text-slate-700">
                 S&P 500 average 2 weeks before offer date
               </label>
-              <Input 
-                id="sp2weeksBefore" 
-                type="number" 
-                placeholder="Enter S&P average" 
-                {...form.register("sp2weeksBefore")} 
+              <Input
+                id="sp2weeksBefore"
+                type="number"
+                placeholder="Enter S&P average"
+                {...form.register("sp2weeksBefore")}
                 required
                 className={form.formState.errors.sp2weeksBefore ? "border-red-500" : ""}
               />
@@ -541,11 +546,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="blueSky" className="block text-sm font-medium text-slate-700">
                 Blue sky expenses
               </label>
-              <Input 
-                id="blueSky" 
-                type="number" 
-                placeholder="Enter expenses" 
-                {...form.register("blueSky")} 
+              <Input
+                id="blueSky"
+                type="number"
+                placeholder="Enter expenses"
+                {...form.register("blueSky")}
                 required
                 className={form.formState.errors.blueSky ? "border-red-500" : ""}
               />
@@ -556,11 +561,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="managementFee" className="block text-sm font-medium text-slate-700">
                 Total management fee
               </label>
-              <Input 
-                id="managementFee" 
-                type="number" 
-                placeholder="Enter fee" 
-                {...form.register("managementFee")} 
+              <Input
+                id="managementFee"
+                type="number"
+                placeholder="Enter fee"
+                {...form.register("managementFee")}
                 required
                 className={form.formState.errors.managementFee ? "border-red-500" : ""}
               />
@@ -571,11 +576,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="bookValue" className="block text-sm font-medium text-slate-700">
                 Book value
               </label>
-              <Input 
-                id="bookValue" 
-                type="number" 
-                placeholder="Enter book value" 
-                {...form.register("bookValue")} 
+              <Input
+                id="bookValue"
+                type="number"
+                placeholder="Enter book value"
+                {...form.register("bookValue")}
                 required
                 className={form.formState.errors.bookValue ? "border-red-500" : ""}
               />
@@ -586,11 +591,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="totalAssets" className="block text-sm font-medium text-slate-700">
                 Total assets
               </label>
-              <Input 
-                id="totalAssets" 
-                type="number" 
-                placeholder="Enter total assets" 
-                {...form.register("totalAssets")} 
+              <Input
+                id="totalAssets"
+                type="number"
+                placeholder="Enter total assets"
+                {...form.register("totalAssets")}
                 required
                 className={form.formState.errors.totalAssets ? "border-red-500" : ""}
               />
@@ -601,11 +606,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="totalRevenue" className="block text-sm font-medium text-slate-700">
                 Total revenue
               </label>
-              <Input 
-                id="totalRevenue" 
-                type="number" 
-                placeholder="Enter total revenue" 
-                {...form.register("totalRevenue")} 
+              <Input
+                id="totalRevenue"
+                type="number"
+                placeholder="Enter total revenue"
+                {...form.register("totalRevenue")}
                 required
                 className={form.formState.errors.totalRevenue ? "border-red-500" : ""}
               />
@@ -616,11 +621,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="netIncome" className="block text-sm font-medium text-slate-700">
                 Net income
               </label>
-              <Input 
-                id="netIncome" 
-                type="number" 
-                placeholder="Enter net income" 
-                {...form.register("netIncome")} 
+              <Input
+                id="netIncome"
+                type="number"
+                placeholder="Enter net income"
+                {...form.register("netIncome")}
                 required
                 className={form.formState.errors.netIncome ? "border-red-500" : ""}
               />
@@ -631,11 +636,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="roa" className="block text-sm font-medium text-slate-700">
                 Return on assets
               </label>
-              <Input 
-                id="roa" 
-                type="number" 
-                placeholder="Enter ROA" 
-                {...form.register("roa")} 
+              <Input
+                id="roa"
+                type="number"
+                placeholder="Enter ROA"
+                {...form.register("roa")}
                 required
                 className={form.formState.errors.roa ? "border-red-500" : ""}
               />
@@ -646,11 +651,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="leverage" className="block text-sm font-medium text-slate-700">
                 Leverage
               </label>
-              <Input 
-                id="leverage" 
-                type="number" 
-                placeholder="Enter leverage" 
-                {...form.register("leverage")} 
+              <Input
+                id="leverage"
+                type="number"
+                placeholder="Enter leverage"
+                {...form.register("leverage")}
                 required
                 className={form.formState.errors.leverage ? "border-red-500" : ""}
               />
@@ -661,11 +666,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="nVCs" className="block text-sm font-medium text-slate-700">
                 Count of VC firms backing IPO firm
               </label>
-              <Input 
-                id="nVCs" 
-                type="number" 
-                placeholder="Enter count of VC firms" 
-                {...form.register("nVCs")} 
+              <Input
+                id="nVCs"
+                type="number"
+                placeholder="Enter count of VC firms"
+                {...form.register("nVCs")}
                 required
                 className={form.formState.errors.nVCs ? "border-red-500" : ""}
               />
@@ -676,11 +681,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="nExecutives" className="block text-sm font-medium text-slate-700">
                 Count of executives
               </label>
-              <Input 
-                id="nExecutives" 
-                type="number" 
-                placeholder="Enter count of executives" 
-                {...form.register("nExecutives")} 
+              <Input
+                id="nExecutives"
+                type="number"
+                placeholder="Enter count of executives"
+                {...form.register("nExecutives")}
                 required
                 className={form.formState.errors.nExecutives ? "border-red-500" : ""}
               />
@@ -691,11 +696,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="priorFinancing" className="block text-sm font-medium text-slate-700">
                 Prior financing received
               </label>
-              <Input 
-                id="priorFinancing" 
-                type="number" 
-                placeholder="Enter prior financing" 
-                {...form.register("priorFinancing")} 
+              <Input
+                id="priorFinancing"
+                type="number"
+                placeholder="Enter prior financing"
+                {...form.register("priorFinancing")}
                 required
                 className={form.formState.errors.priorFinancing ? "border-red-500" : ""}
               />
@@ -706,11 +711,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="reputationLeadMax" className="block text-sm font-medium text-slate-700">
                 Lead underwriter reputation (max if more than one)
               </label>
-              <Input 
-                id="reputationLeadMax" 
-                type="number" 
-                placeholder="Enter reputation score" 
-                {...form.register("reputationLeadMax")} 
+              <Input
+                id="reputationLeadMax"
+                type="number"
+                placeholder="Enter reputation score"
+                {...form.register("reputationLeadMax")}
                 required
                 className={form.formState.errors.reputationLeadMax ? "border-red-500" : ""}
               />
@@ -721,11 +726,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="reputationAvg" className="block text-sm font-medium text-slate-700">
                 Average reputation of all underwriters
               </label>
-              <Input 
-                id="reputationAvg" 
-                type="number" 
-                placeholder="Enter average reputation" 
-                {...form.register("reputationAvg")} 
+              <Input
+                id="reputationAvg"
+                type="number"
+                placeholder="Enter average reputation"
+                {...form.register("reputationAvg")}
                 required
                 className={form.formState.errors.reputationAvg ? "border-red-500" : ""}
               />
@@ -736,11 +741,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="nPatents" className="block text-sm font-medium text-slate-700">
                 Count of patents granted at time of IPO
               </label>
-              <Input 
-                id="nPatents" 
-                type="number" 
-                placeholder="Enter count of patents" 
-                {...form.register("nPatents")} 
+              <Input
+                id="nPatents"
+                type="number"
+                placeholder="Enter count of patents"
+                {...form.register("nPatents")}
                 required
                 className={form.formState.errors.nPatents ? "border-red-500" : ""}
               />
@@ -751,11 +756,11 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
               <label htmlFor="ipoSize" className="block text-sm font-medium text-slate-700">
                 IPO size in USD
               </label>
-              <Input 
-                id="ipoSize" 
-                type="number" 
-                placeholder="Enter IPO size" 
-                {...form.register("ipoSize")} 
+              <Input
+                id="ipoSize"
+                type="number"
+                placeholder="Enter IPO size"
+                {...form.register("ipoSize")}
                 required
                 className={form.formState.errors.ipoSize ? "border-red-500" : ""}
               />
@@ -849,5 +854,5 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
         </div>
       </form>
     </div>
-  );
+  )
 }

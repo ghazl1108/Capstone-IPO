@@ -12,7 +12,7 @@ export default function SiteFooter() {
               <img 
                 src="/images/logo-white.png" 
                 alt="IPO Prediction" 
-                className="h-14 w-auto" // Increased from h-8 to h-14
+                className="h-32 w-auto" // Increased from h-8 to h-14
                 onError={(e) => {
                   console.error("White logo failed to load");
                   e.target.style.display = 'none';
