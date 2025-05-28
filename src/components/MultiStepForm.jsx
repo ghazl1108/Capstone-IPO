@@ -28,9 +28,39 @@ const predictionDataSchema = z.object({
   vc: z.string().min(1, { message: "VC backing indicator is required" }),
   prominence: z.string().min(1, { message: "VC prominence is required" }),
   pe: z.string().min(1, { message: "PE backing indicator is required" }),
-  age: z.string().min(1, { message: "Firm age is required" }),
-  year: z.string().min(1, { message: "Issue year is required" }),
-  nUnderwriters: z.string().min(1, { message: "Count of underwriters is required" }),
+  
+  // Integer fields with database constraints
+  age: z.string().refine((val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 0 && num <= 200;
+  }, { message: "Age must be between 0 and 200" }),
+  
+  year: z.string().refine((val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 1900 && num <= 2100;
+  }, { message: "Year must be between 1900 and 2100" }),
+  
+  nUnderwriters: z.string().refine((val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 0 && num <= 100;
+  }, { message: "Number of underwriters must be between 0 and 100" }),
+  
+  nVCs: z.string().refine((val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 0 && num <= 100;
+  }, { message: "Number of VC firms must be between 0 and 100" }),
+  
+  nExecutives: z.string().refine((val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 0 && num <= 1000;
+  }, { message: "Number of executives must be between 0 and 1000" }),
+  
+  nPatents: z.string().refine((val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 0 && num <= 10000;
+  }, { message: "Number of patents must be between 0 and 10000" }),
+  
+  // Float fields (no database constraints)
   sharesOfferedPerc: z.string().min(1, { message: "Shares offered percentage is required" }),
   investmentReceived: z.string().min(1, { message: "Investment received is required" }),
   amountOnProspectus: z.string().min(1, { message: "Amount on prospectus is required" }),
@@ -44,12 +74,9 @@ const predictionDataSchema = z.object({
   netIncome: z.string().min(1, { message: "Net income is required" }),
   roa: z.string().min(1, { message: "Return on assets is required" }),
   leverage: z.string().min(1, { message: "Leverage is required" }),
-  nVCs: z.string().min(1, { message: "Count of VC firms is required" }),
-  nExecutives: z.string().min(1, { message: "Count of executives is required" }),
   priorFinancing: z.string().min(1, { message: "Prior financing is required" }),
   reputationLeadMax: z.string().min(1, { message: "Lead underwriter reputation is required" }),
   reputationAvg: z.string().min(1, { message: "Average underwriter reputation is required" }),
-  nPatents: z.string().min(1, { message: "Count of patents is required" }),
   ipoSize: z.string().min(1, { message: "IPO size is required" }),
 })
 
@@ -104,7 +131,7 @@ const booleanOptions = [
   { value: "false", label: "False" },
 ]
 
-export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
+export function MultiStepForm({ onSubmit, currentStep, setCurrentStep, disabled = false }) {
   // Store form data between steps
   const [formData, setFormData] = useState({})
 
@@ -424,12 +451,14 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
 
             <div className="space-y-2">
               <label htmlFor="age" className="block text-sm font-medium text-slate-700">
-                Firm age
+                Firm age (0-200 years)
               </label>
               <Input
                 id="age"
                 type="number"
-                placeholder="Enter firm age"
+                min="0"
+                max="200"
+                placeholder="Enter firm age (0-200)"
                 {...form.register("age")}
                 required
                 className={form.formState.errors.age ? "border-red-500" : ""}
@@ -439,12 +468,14 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
 
             <div className="space-y-2">
               <label htmlFor="year" className="block text-sm font-medium text-slate-700">
-                Issue year
+                Issue year (1900-2100)
               </label>
               <Input
                 id="year"
                 type="number"
-                placeholder="Enter issue year"
+                min="1900"
+                max="2100"
+                placeholder="Enter issue year (1900-2100)"
                 {...form.register("year")}
                 required
                 className={form.formState.errors.year ? "border-red-500" : ""}
@@ -454,12 +485,14 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
 
             <div className="space-y-2">
               <label htmlFor="nUnderwriters" className="block text-sm font-medium text-slate-700">
-                Count of underwriters
+                Count of underwriters (0-100)
               </label>
               <Input
                 id="nUnderwriters"
                 type="number"
-                placeholder="Enter count of underwriters"
+                min="0"
+                max="100"
+                placeholder="Enter count of underwriters (0-100)"
                 {...form.register("nUnderwriters")}
                 required
                 className={form.formState.errors.nUnderwriters ? "border-red-500" : ""}
@@ -664,12 +697,14 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
 
             <div className="space-y-2">
               <label htmlFor="nVCs" className="block text-sm font-medium text-slate-700">
-                Count of VC firms backing IPO firm
+                Count of VC firms backing IPO firm (0-100)
               </label>
               <Input
                 id="nVCs"
                 type="number"
-                placeholder="Enter count of VC firms"
+                min="0"
+                max="100"
+                placeholder="Enter count of VC firms (0-100)"
                 {...form.register("nVCs")}
                 required
                 className={form.formState.errors.nVCs ? "border-red-500" : ""}
@@ -679,12 +714,14 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
 
             <div className="space-y-2">
               <label htmlFor="nExecutives" className="block text-sm font-medium text-slate-700">
-                Count of executives
+                Count of executives (0-1000)
               </label>
               <Input
                 id="nExecutives"
                 type="number"
-                placeholder="Enter count of executives"
+                min="0"
+                max="1000"
+                placeholder="Enter count of executives (0-1000)"
                 {...form.register("nExecutives")}
                 required
                 className={form.formState.errors.nExecutives ? "border-red-500" : ""}
@@ -739,12 +776,14 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
 
             <div className="space-y-2">
               <label htmlFor="nPatents" className="block text-sm font-medium text-slate-700">
-                Count of patents granted at time of IPO
+                Count of patents granted at time of IPO (0-10000)
               </label>
               <Input
                 id="nPatents"
                 type="number"
-                placeholder="Enter count of patents"
+                min="0"
+                max="10000"
+                placeholder="Enter count of patents (0-10000)"
                 {...form.register("nPatents")}
                 required
                 className={form.formState.errors.nPatents ? "border-red-500" : ""}
@@ -825,8 +864,8 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
             type="button"
             variant="outline"
             onClick={handleBack}
-            disabled={currentStep === 0}
-            className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50"
+            disabled={currentStep === 0 || disabled}
+            className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
@@ -837,7 +876,8 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
                 type="button"
                 variant="outline"
                 onClick={handleSkip}
-                className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50"
+                disabled={disabled}
+                className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Skip
               </Button>
@@ -846,9 +886,19 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep }) {
             <Button
               type="button"
               onClick={handleNext}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-sm font-medium"
+              disabled={disabled}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-blue-600"
             >
-              {currentStep === steps.length - 1 ? "Submit" : "Next"} <ArrowRight className="ml-2 h-4 w-4" />
+              {disabled && currentStep === steps.length - 1 ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  {currentStep === steps.length - 1 ? "Submit" : "Next"} <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </div>
         </div>
