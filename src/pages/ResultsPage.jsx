@@ -13,6 +13,70 @@ export default function ResultsPage() {
   const [shareLoading, setShareLoading] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  // Helper function to parse risk factors from backend data
+  const parseRiskFactors = (riskAnalysis) => {
+    if (!riskAnalysis) return [];
+    
+    // Parse the JSON stored in riskFactors field
+    let riskFactorData = {};
+    try {
+      if (riskAnalysis.riskFactors && typeof riskAnalysis.riskFactors === 'string') {
+        riskFactorData = JSON.parse(riskAnalysis.riskFactors);
+      }
+    } catch (e) {
+      console.warn("Failed to parse riskFactors JSON:", e);
+    }
+
+    // Extract critical concerns from the parsed data
+    const concerns = riskFactorData.concerns || [];
+    if (concerns.length > 0) {
+      return concerns;
+    }
+
+    // Fallback to generic risk factors if no specific concerns found
+    return [
+      "Analysis completed - review detailed results",
+      "Risk assessment performed using AI models",
+      "Consider consulting with financial advisors"
+    ];
+  };
+
+  // Helper function to generate recommendations based on risk analysis
+  const generateRecommendations = (riskAnalysis) => {
+    if (!riskAnalysis) {
+      return [
+        "Submit risk factors text for detailed analysis",
+        "Complete all form sections for better predictions",
+        "Consult with IPO advisors for additional insights"
+      ];
+    }
+
+    const riskScore = riskAnalysis.riskScore || 50;
+    let recommendations = [];
+
+    if (riskScore <= 30) {
+      recommendations = [
+        "Strong position for IPO - proceed with confidence",
+        "Consider optimal timing for market entry",
+        "Prepare comprehensive investor materials"
+      ];
+    } else if (riskScore <= 60) {
+      recommendations = [
+        "Address identified risk factors before IPO",
+        "Strengthen financial metrics and governance",
+        "Consider market conditions for timing"
+      ];
+    } else {
+      recommendations = [
+        "Significant risk mitigation required before IPO",
+        "Focus on strengthening business fundamentals",
+        "Consider delaying IPO until risks are addressed"
+      ];
+    }
+
+    return recommendations;
+  };
+
   // Load data from localStorage (either backend response or fallback)
   useEffect(() => {
     // Get registration data from localStorage
@@ -23,10 +87,12 @@ export default function ResultsPage() {
 
       // Check if we have backend response data
       if (parsedData.backendResponse) {
-        console.log("Backend response data found:", parsedData.backendResponse)
-        
         // Extract data from backend response
         const { user, prediction, riskAnalysis, predictionHistory } = parsedData.backendResponse
+        
+        // Parse risk factors from backend data
+        const riskFactors = parseRiskFactors(riskAnalysis);
+        const recommendations = generateRecommendations(riskAnalysis);
         
         setResults({
           // Backend prediction data (may be null if AI service failed)
@@ -34,7 +100,7 @@ export default function ResultsPage() {
           day1Close: prediction.predictedCloseDay1 || "Processing...",
           predictionStatus: prediction.predictionStatus,
           
-          // Risk analysis
+          // Risk analysis - use real data from backend
           riskLevel: riskAnalysis?.riskScore ? Math.round(riskAnalysis.riskScore) : "Analyzing...",
           riskAnalysisData: riskAnalysis,
           additionalInfo: riskAnalysis?.additionalInfo,
@@ -48,17 +114,9 @@ export default function ResultsPage() {
           isBackendConnected: true,
           submittedAt: parsedData.submittedAt,
           
-          // Mock recommendations (can be enhanced later)
-          riskFactors: [
-            "IPO market conditions analysis pending",
-            "Sector-specific risk assessment in progress",
-            "Competitive analysis being evaluated",
-          ],
-          recommendations: [
-            "Monitor AI prediction completion",
-            "Review risk analysis results when available",
-            "Consider market timing for IPO launch",
-          ],
+          // Real risk factors and recommendations from AI analysis
+          riskFactors: riskFactors,
+          recommendations: recommendations,
         })
       } else {
         console.log("Using fallback demo data")
@@ -130,6 +188,16 @@ export default function ResultsPage() {
     const companyName = userData?.companyName || "Your Company"
     const date = new Date().toLocaleDateString()
 
+    // Parse risk factor data for report
+    let riskFactorData = {};
+    if (results?.riskAnalysisData?.riskFactors) {
+      try {
+        riskFactorData = JSON.parse(results.riskAnalysisData.riskFactors);
+      } catch (e) {
+        console.warn("Failed to parse riskFactors for report:", e);
+      }
+    }
+
     return `
 IPO PREDICTION REPORT
 =====================
@@ -143,6 +211,27 @@ Offer Price: $${results.offerPrice}
 Day 1 Close: $${results.day1Close}
 Risk Level: ${results.riskLevel}% (${results.riskLevel < 30 ? "Low Risk" : results.riskLevel < 70 ? "Moderate Risk" : "High Risk"})
 
+${results?.riskAnalysisData ? `
+DETAILED RISK ANALYSIS
+----------------------
+Overall Risk Score: ${results.riskAnalysisData.riskScore}/100
+Risk Level: ${results.riskAnalysisData.riskLevel}
+Analysis Status: ${results.riskAnalysisData.analysisStatus}
+
+${riskFactorData.breakdown ? `
+Risk Score Breakdown:
+${Object.entries(riskFactorData.breakdown).map(([category, score]) => `- ${category}: ${score}/20`).join('\n')}
+` : ''}
+
+${results.riskAnalysisData.riskFactorsText ? `
+Input Risk Factors:
+"${results.riskAnalysisData.riskFactorsText}"
+` : ''}
+
+${riskFactorData.model ? `Analysis Model: ${riskFactorData.model}` : ''}
+${riskFactorData.timestamp ? `Generated: ${riskFactorData.timestamp}` : ''}
+` : ''}
+
 RISK FACTORS
 ------------
 ${results.riskFactors.map((factor, index) => `${index + 1}. ${factor}`).join("\n")}
@@ -151,12 +240,28 @@ RECOMMENDATIONS
 ---------------
 ${results.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join("\n")}
 
+PREDICTION DETAILS
+------------------
+${results?.predictionData ? `
+Prediction ID: ${results.predictionData.$id}
+Model Used: ${results.predictionData.modelUsed || 'N/A'}
+Prediction Status: ${results.predictionData.predictionStatus}
+Industry: ${results.predictionData.industryFF12}
+Exchange: ${results.predictionData.exchange}
+Predicted At: ${results.predictionData.predictedAt ? new Date(results.predictionData.predictedAt).toLocaleString() : 'N/A'}
+` : 'No detailed prediction data available'}
+
 COMPANY DATA
 ------------
 ${
-  userData
-    ? Object.entries(userData)
-        .filter(([key]) => key !== "password") // Exclude password
+  userData?.backendResponse?.user
+    ? Object.entries(userData.backendResponse.user)
+        .filter(([key]) => key !== "password" && !key.startsWith("$")) // Exclude password and Appwrite internal fields
+        .map(([key, value]) => `${key}: ${value}`)
+        .join("\n")
+    : userData?.submissionData
+    ? Object.entries(userData.submissionData)
+        .filter(([key]) => key !== "password")
         .map(([key, value]) => `${key}: ${value}`)
         .join("\n")
     : "No company data available"
@@ -284,7 +389,18 @@ This report was generated by IPO Prediction Service
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <div className="border border-slate-200 rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold mb-4">Risk Factors</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Risk Factors</h2>
+              {results?.isBackendConnected && results?.riskAnalysisData ? (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  🤖 AI Analyzed
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  📝 Generic
+                </span>
+              )}
+            </div>
             <ul className="space-y-2">
               {results.riskFactors.map((factor, index) => (
                 <li key={index} className="flex items-start">
@@ -298,7 +414,18 @@ This report was generated by IPO Prediction Service
           </div>
 
           <div className="border border-slate-200 rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold mb-4">Recommendations</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Recommendations</h2>
+              {results?.isBackendConnected && results?.riskAnalysisData ? (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  🎯 Risk-Based
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  📝 Generic
+                </span>
+              )}
+            </div>
             <ul className="space-y-2">
               {results.recommendations.map((recommendation, index) => (
                 <li key={index} className="flex items-start">
@@ -311,6 +438,102 @@ This report was generated by IPO Prediction Service
             </ul>
           </div>
         </div>
+
+        {/* Detailed Risk Analysis Section (if available) */}
+        {results?.isBackendConnected && results?.riskAnalysisData && (
+          <div className="mb-10 border border-slate-200 rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-bold mb-6 flex items-center">
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
+                🧠
+              </div>
+              AI Risk Analysis Details
+            </h2>
+            
+            {(() => {
+              // Parse the risk factors JSON for detailed display
+              let riskFactorData = {};
+              try {
+                if (results.riskAnalysisData.riskFactors && typeof results.riskAnalysisData.riskFactors === 'string') {
+                  riskFactorData = JSON.parse(results.riskAnalysisData.riskFactors);
+                }
+              } catch (e) {
+                console.warn("Failed to parse riskFactors JSON for display:", e);
+              }
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Risk Score & Level */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-3">Risk Assessment</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded">
+                        <span className="font-medium text-slate-700">Overall Risk Score:</span>
+                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                          results.riskAnalysisData.riskScore <= 30 ? 'bg-green-100 text-green-800' :
+                          results.riskAnalysisData.riskScore <= 60 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {results.riskAnalysisData.riskScore}/100
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded">
+                        <span className="font-medium text-slate-700">Risk Level:</span>
+                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                          results.riskAnalysisData.riskLevel?.includes('Low') || results.riskAnalysisData.riskLevel?.includes('Minimal') ? 'bg-green-100 text-green-800' :
+                          results.riskAnalysisData.riskLevel?.includes('Moderate') ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {results.riskAnalysisData.riskLevel || 'Unknown'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded">
+                        <span className="font-medium text-slate-700">Analysis Status:</span>
+                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                          results.riskAnalysisData.analysisStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                          results.riskAnalysisData.analysisStatus === 'failed' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {results.riskAnalysisData.analysisStatus || 'Unknown'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI Analysis Summary */}
+                  {results.riskAnalysisData.riskFactorsText && (
+                    <div className="md:col-span-2">
+                      <h3 className="text-lg font-semibold text-slate-900 mb-3">Input Risk Factors</h3>
+                      <div className="p-4 bg-slate-50 rounded border">
+                        <p className="text-sm text-slate-700 italic">
+                          "{results.riskAnalysisData.riskFactorsText.length > 500 
+                            ? results.riskAnalysisData.riskFactorsText.substring(0, 500) + '...' 
+                            : results.riskAnalysisData.riskFactorsText}"
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Model & Timestamp Info */}
+                  <div className="md:col-span-2 text-xs text-slate-500 border-t pt-4 mt-4">
+                    <div className="flex justify-between items-center">
+                      <span>Analysis performed by: {riskFactorData.model || 'AI Model'}</span>
+                      <span>
+                        {riskFactorData.timestamp && (
+                          <>Generated: {riskFactorData.timestamp}</>
+                        )}
+                        {results.riskAnalysisData.analyzedAt && (
+                          <>Analyzed: {new Date(results.riskAnalysisData.analyzedAt).toLocaleString()}</>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row justify-center gap-4">
           <Button

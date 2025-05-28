@@ -83,6 +83,7 @@ const predictionDataSchema = z.object({
 const riskAnalysisSchema = z.object({
   additionalInfo: z.string().optional(),
   uploadPdf: z.boolean().optional().default(false),
+  riskFactorsText: z.string().min(50, { message: "Risk factors text must be at least 50 characters" }).max(10000, { message: "Risk factors text must be at most 10000 characters" }),
 })
 
 const formSchemas = [registrationSchema, predictionDataSchema, riskAnalysisSchema]
@@ -820,6 +821,21 @@ export function MultiStepForm({ onSubmit, currentStep, setCurrentStep, disabled 
                 className="min-h-[150px]"
                 {...form.register("additionalInfo")}
               />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="riskFactorsText" className="block text-sm font-medium text-slate-700">
+                Risk Factors Text *
+              </label>
+              <Textarea
+                id="riskFactorsText"
+                placeholder="Describe the risk factors your company faces (minimum 50 characters, maximum 10,000). Example: Competition, regulatory challenges, market conditions, etc."
+                className="min-h-[200px]"
+                {...form.register("riskFactorsText")}
+                required
+              />
+              <ErrorMessage name="riskFactorsText" />
+              <p className="text-sm text-slate-500">This text will be analyzed by AI to provide risk scoring and recommendations.</p>
             </div>
 
             <div className="flex items-start space-x-3 p-4 border rounded-md">

@@ -114,7 +114,8 @@ class ApiService {
       
       // Step 3: Risk analysis
       additionalInfo: formData.additionalInfo || '',
-      uploadPdf: Boolean(formData.uploadPdf) || false
+      uploadPdf: Boolean(formData.uploadPdf) || false,
+      riskFactorsText: formData.riskFactorsText || ''
     };
 
     console.log('Converted flat data:', flatData);
